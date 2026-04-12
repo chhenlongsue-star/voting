@@ -53,7 +53,7 @@ Route::get('/auth/google/callback', function () {
             ]
         );
 
-        Auth::login($user, true); // Added 'true' to remember the session
+        Auth::login($user, true); // Keep the session alive
         return redirect()->intended('/dashboard');
 
     } catch (\Exception $e) {
@@ -63,12 +63,12 @@ Route::get('/auth/google/callback', function () {
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated User Routes
+| Authenticated User Routes (Dashboard, Profile, Voting)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'verified'])->group(function () {
     
-    // Dashboard Logic
+    // Dashboard
     Route::get('/dashboard', function () {
         $polls = Poll::with(['options' => function ($query) {
             $query->withCount('votes');
@@ -86,7 +86,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return view('dashboard', compact('polls'));
     })->name('dashboard');
     
-    // The Vote Submission Route (Strictly within Auth Group)
+    // THE CRITICAL VOTE ROUTE - Name matches dashboard.blade.php
     Route::post('/polls/{poll}/vote', [VoteController::class, 'store'])->name('votes.store');
 
     // Profile Management
