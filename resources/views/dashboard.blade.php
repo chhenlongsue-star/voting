@@ -4,15 +4,13 @@
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 {{ __('Available Polls') }}
             </h2>
-            
-            
         </div>
     </x-slot>
 
     <div class="py-12">
-        
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
+            {{-- Success Message --}}
             @if (session('success'))
                 <div class="mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 shadow-sm rounded">
                     <p class="font-bold">Success!</p>
@@ -20,6 +18,7 @@
                 </div>
             @endif
 
+            {{-- Error Message --}}
             @if (session('error'))
                 <div class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 shadow-sm rounded">
                     <p class="font-bold">Wait a minute...</p>
@@ -46,7 +45,9 @@
                                     {{ $poll->category->name ?? 'Uncategorized' }}
                                 </span>
                             </div>
+
                             @if($poll->user_has_voted)
+                                {{-- Results View --}}
                                 <div class="space-y-4 mt-4">
                                     @php
                                         $totalVotes = $poll->options->sum('votes_count');
@@ -79,7 +80,8 @@
                                     <p class="text-center text-xs text-gray-400 mt-4 italic">You have already submitted your choice.</p>
                                 </div>
                             @else
-                                <form action="{{ route('polls.vote', $poll->id) }}" method="POST">
+                                {{-- Voting Form - FIX: Route name changed to votes.store --}}
+                                <form action="{{ route('votes.store', $poll->id) }}" method="POST">
                                     @csrf
                                     <div class="space-y-3">
                                         @foreach ($poll->options as $option)
