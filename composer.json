@@ -34,6 +34,14 @@
             "Tests\\": "tests/"
         }
     },
+
+    "scripts": {
+    "post-install-cmd": [
+        "php artisan migrate --force",
+        "php artisan route:clear",
+        "php artisan config:clear"
+    ]
+}
     "scripts": {
         "setup": [
             "composer install",
