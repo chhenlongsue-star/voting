@@ -33,7 +33,7 @@ Route::get('/', function () {
 
 /*
 |--------------------------------------------------------------------------
-| Google Social Authentication Routes
+| Google Social Authentication
 |--------------------------------------------------------------------------
 */
 Route::get('/auth/google', function () {
@@ -50,7 +50,7 @@ Route::get('/auth/google/callback', function () {
             ['email' => $googleUser->getEmail()],
             [
                 'name' => $googleUser->getName(),
-                'avatar' => $googleUser->getAvatar(), // Stores Gmail profile pic
+                'avatar' => $googleUser->getAvatar(), 
                 'password' => $existingUser->password ?? bcrypt(Str::random(24)),
                 'email_verified_at' => now(), 
             ]
@@ -87,9 +87,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return view('dashboard', compact('polls'));
     })->name('dashboard');
     
-    Route::post('/polls/{poll}/vote', [\App\Http\Controllers\VoteController::class, 'store'])->middleware('auth')->name('votes.store');
-    // Route::post('/polls/{poll}/vote', [VoteController::class, 'store'])->name('polls.vote');
+    // The Vote Submission Route
+    Route::post('/polls/{poll}/vote', [VoteController::class, 'store'])->name('votes.store');
 
+    // Profile Management
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -100,19 +101,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 | Admin Routes (Protected by AdminAccess Middleware)
 |--------------------------------------------------------------------------
 */
-// 'admin.access' checks both is_admin and role columns
 Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->group(function () {
     
-    // User Management
     Route::resource('users', UserController::class);
-
-    // Specific route for deleting a single option
     Route::delete('polls/{poll}/options/{option}', [PollController::class, 'destroyOption'])->name('polls.options.destroy');
-
-    // Standard Resource Routes for Polls
     Route::resource('polls', PollController::class);
-
-    // Standard Resource Routes for Categories
     Route::resource('categories', CategoryController::class);
 });
 
