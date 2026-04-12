@@ -86,7 +86,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         return view('dashboard', compact('polls'));
     })->name('dashboard');
-    Route::post('/polls/{poll}/vote', [VoteController.php, 'store'])->middleware('auth')->name('votes.store');
+    
+    Route::post('/polls/{poll}/vote', [\App\Http\Controllers\VoteController::class, 'store'])->middleware('auth')->name('votes.store');
     // Route::post('/polls/{poll}/vote', [VoteController::class, 'store'])->name('polls.vote');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
