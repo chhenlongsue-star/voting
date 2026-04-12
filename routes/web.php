@@ -23,9 +23,7 @@ Route::get('/', function () {
         }])
         ->where('is_active', true)
         ->get()
-        ->sortByDesc(function($poll) {
-            return $poll->options->sum('votes_count');
-        })
+        ->sortByDesc(fn($poll) => $poll->options->sum('votes_count'))
         ->first();
 
     return view('welcome', compact('trendingPoll'));
@@ -43,20 +41,19 @@ Route::get('/auth/google', function () {
 Route::get('/auth/google/callback', function () {
     try {
         $googleUser = Socialite::driver('google')->user();
-        
         $existingUser = User::where('email', $googleUser->getEmail())->first();
 
         $user = User::updateOrCreate(
             ['email' => $googleUser->getEmail()],
             [
                 'name' => $googleUser->getName(),
-                'avatar' => $googleUser->getAvatar(), 
+                'avatar' => $googleUser->getAvatar(),
                 'password' => $existingUser->password ?? bcrypt(Str::random(24)),
-                'email_verified_at' => now(), 
+                'email_verified_at' => now(),
             ]
         );
 
-        Auth::login($user);
+        Auth::login($user, true); // Added 'true' to remember the session
         return redirect()->intended('/dashboard');
 
     } catch (\Exception $e) {
@@ -66,16 +63,18 @@ Route::get('/auth/google/callback', function () {
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated User Routes (Dashboard, Profile, Voting)
+| Authenticated User Routes
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'verified'])->group(function () {
     
+    // Dashboard Logic
     Route::get('/dashboard', function () {
         $polls = Poll::with(['options' => function ($query) {
             $query->withCount('votes');
         }])
         ->where('is_active', true)
+        ->latest()
         ->get()
         ->map(function ($poll) {
             $poll->user_has_voted = $poll->options()->whereHas('votes', function ($query) {
@@ -87,7 +86,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return view('dashboard', compact('polls'));
     })->name('dashboard');
     
-    // The Vote Submission Route
+    // The Vote Submission Route (Strictly within Auth Group)
     Route::post('/polls/{poll}/vote', [VoteController::class, 'store'])->name('votes.store');
 
     // Profile Management
@@ -98,11 +97,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Admin Routes (Protected by AdminAccess Middleware)
+| Admin Routes
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'admin.access'])->prefix('admin')->name('admin.')->group(function () {
-    
     Route::resource('users', UserController::class);
     Route::delete('polls/{poll}/options/{option}', [PollController::class, 'destroyOption'])->name('polls.options.destroy');
     Route::resource('polls', PollController::class);
